@@ -1,6 +1,7 @@
 const state = {
     sequence : sequenceGen(5),
-    inputs : new Array()
+    inputs : new Array(),
+    difficulty : "Normal"
 }
 window.l = state
 
@@ -15,28 +16,32 @@ function sequenceGen(length){
 }
 
 //Pass in the number of sounds required,play the array of audio
-function animationGen(i = 0){
+function animationGen(i = 0,timing){
     const sequence = state.sequence
     if(i < sequence.length){
+        console.log(timing)
       const sound = new Audio(`sounds/${sequence[i]}.mp3`)
         sound.play()
         $(`#${sequence[i]}`).addClass("pressed")
         setTimeout(()=>{
         $(`#${sequence[i]}`).removeClass("pressed")
-        animationGen(i+1)
-        },700) 
+        animationGen(i+1,timing)
+        },timing) 
     } 
 }
 
 //window on load 
-const initialise = init.bind(this,1)
+const initialise = function(e){
+     state.difficulty = $(e.target).text() 
+     init(1)
+}
 
-$(window).keydown(initialise)
+$(".play").click(initialise)
 
 function init(level){
     state.inputs = new Array() 
     //Disable the keydown event listener
-    $(window).unbind("keydown",initialise)
+    $(".play").unbind("click",initialise)
     //Render the title of the level
     $("h1").text(`Level ${level}`)
     $("h1").fadeIn("fast").fadeOut("fast").fadeIn("fast").fadeOut("fast").fadeIn("fast")
@@ -44,7 +49,16 @@ function init(level){
     state.sequence = sequenceGen(level)
     console.log(state.sequence)
     //Play the animation
-    animationGen()
+    if(state.difficulty == "Easy"){
+        const audio = new Audio("sounds/laugh.mp3")
+        audio.play()
+        setTimeout(()=>{audio.pause()},3000)
+        animationGen(0,700)
+    }else if(state.difficulty == "Normal"){
+        animationGen(0,500)
+    }else{
+        animationGen(0,200)
+    }
     //Set Up Mouse Event Listener
     $(".btn").click(playerInput)
 }
@@ -72,7 +86,7 @@ function playerInput(e){
         setTimeout(()=>{
             $("body").removeClass("game-over")
             $("h1").text("Press A key to Start")
-            $(window).keydown(initialise)},500)
+            $(".play").click(initialise)},500)
     }else if(state.inputs.length == state.sequence.length && i){
         console.log("Test")
         $(".btn").unbind("click",playerInput)
